@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback } from "react"
 import dynamic from "next/dynamic"
 import { stages } from "@/data/courses"
-import { knowledge, researchTasks, skills, skillToKnowledge, getKnowledgeCourses } from "@/data/knowledgeGraph"
+import { knowledge, researchTasks } from "@/data/knowledgeGraph"
 import KnowledgeTree from "@/components/KnowledgeTree"
 import KnowledgeDetailDrawer from "@/components/KnowledgeDetailDrawer"
-import GraphExplorer from "./GraphExplorer"
+
+const GraphExplorer = dynamic(() => import("./GraphExplorer"), { ssr: false })
 
 export default function GraphPage() {
   const [completedCourses, setCompletedCourses] = useState<string[]>([])
@@ -158,6 +159,11 @@ export default function GraphPage() {
                 completedCourses={completedCourses}
                 onSelectKnowledge={setSelectedKnowledge}
                 phaseFilter={showAllNodes ? 0 : phaseFilter}
+                showSkills={showSkills}
+                showKnowledge={showKnowledge}
+                showTasks={showTasks}
+                showCourses={showCourses}
+                searchQuery={searchQuery}
               />
             </div>
           )}
