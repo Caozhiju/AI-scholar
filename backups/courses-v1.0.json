@@ -1,0 +1,92 @@
+export interface QuizQuestion {
+  id: string
+  type: "single"
+  question: string
+  options: string[]
+  answer: number
+  explanation: string
+}
+
+export interface FlowNode {
+  id: string
+  label: string
+  isInput?: boolean
+  isResult?: boolean
+  knowledgeId?: string
+}
+
+export interface FlowEdge {
+  source: string
+  target: string
+}
+
+export interface FlowAsset {
+  type: "flow"
+  title: string
+  description: string
+  nodes: FlowNode[]
+  edges: FlowEdge[]
+}
+
+export interface MindMapChild {
+  id?: string
+  label: string
+  parent?: string
+  knowledgeId?: string
+  children?: MindMapChild[]
+}
+
+export interface MindMapAsset {
+  type: "mindmap"
+  title: string
+  description: string
+  root: string
+  children: MindMapChild[]
+}
+
+export interface PathStep {
+  label: string
+  knowledgeId?: string
+}
+
+export interface PathAsset {
+  type: "path"
+  title: string
+  description: string
+  steps: (string | PathStep)[]
+}
+
+export type VisualAsset = FlowAsset | MindMapAsset | PathAsset
+
+export interface Course {
+  id: string
+  title: string
+  description: string
+  difficulty: "入门" | "初级" | "中级" | "高级"
+  estimatedMinutes: number
+  objectives: string[]
+  content: string
+  quiz?: QuizQuestion[]
+  position: number
+  whyLearn: string
+  nextSkill: string
+  relatedKnowledge?: string[]
+  status: "draft" | "reviewing" | "published"
+  researchTasks?: string[]
+  visualAssets?: VisualAsset[]
+}
+
+export interface Stage {
+  id: string
+  title: string
+  courses: Course[]
+}
+
+import { pythonStage } from "./courses.phase1"
+import { cliStage } from "./courses.phase2"
+import { llmStage } from "./courses.phase3"
+import { phase4Stage } from "./courses.phase4"
+
+export const stages: Stage[] = [pythonStage, cliStage, llmStage, phase4Stage]
+
+export const courses: Course[] = stages.flatMap(s => s.courses)
