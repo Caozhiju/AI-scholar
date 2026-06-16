@@ -52,19 +52,7 @@ export default function RootLayout({
             >
               知识图谱
             </Link>
-             <Link
-               href="/review"
-               className="text-gray-500 hover:text-gray-800 transition-colors"
-             >
-               毕业评估
-             </Link>
-             <Link
-               href="/graduate"
-               className="text-gray-500 hover:text-gray-800 transition-colors"
-             >
-               毕业总览
-             </Link>
-             <Link
+              <Link
                 href="/projects"
                 className="text-gray-500 hover:text-gray-800 transition-colors"
               >
