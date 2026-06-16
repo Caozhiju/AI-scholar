@@ -91,6 +91,7 @@ export function buildCoreConcepts(phaseId: string): CoreConcept[] {
   const seen = new Set<string>()
 
   for (const course of stage.courses) {
+    if (!course) continue
     // Extract key concepts from course content
     const lines = course.content.split("\n")
     for (const line of lines) {
@@ -127,6 +128,7 @@ export function buildMistakes(phaseId: string): MistakeItem[] {
   const result: MistakeItem[] = []
 
   for (const course of stage.courses) {
+    if (!course) continue
     // Find common mistakes sections
     const mistakesSection = course.content.match(/常见误区[\s\S]*?(?=# |$)/)
     if (!mistakesSection) continue
@@ -183,7 +185,7 @@ export function buildComprehensiveTest(phaseId: string): ComprehensiveTestQuesti
   const questions: ComprehensiveTestQuestion[] = []
 
   const courseQuizzes = stage.courses.flatMap((c) =>
-    (c.quiz || []).map((q) => ({
+    !c ? [] : (c.quiz || []).map((q) => ({
       ...q,
       type: determineQuestionType(q.question, phaseId),
       knowledgeId: c.relatedKnowledge?.[0],
@@ -208,6 +210,7 @@ export function buildComprehensiveTest(phaseId: string): ComprehensiveTestQuesti
   // Fill remaining with think questions
   if (questions.length < questionCount) {
     for (const course of stage.courses) {
+      if (!course) continue
       const thinkQs = course.content.match(/\*\*Q\d+：[^*]+\*\*/g)
       if (!thinkQs) continue
       for (const tq of thinkQs) {

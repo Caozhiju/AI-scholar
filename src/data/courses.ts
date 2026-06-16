@@ -87,6 +87,6 @@ import { cliStage } from "./courses.phase2"
 import { llmStage } from "./courses.phase3"
 import { phase4Stage } from "./courses.phase4"
 
-export const stages: Stage[] = [pythonStage as Stage, cliStage as Stage, llmStage as Stage, phase4Stage as Stage]
+export const stages: Stage[] = ([pythonStage, cliStage, llmStage, phase4Stage] as Stage[]).filter(Boolean) as Stage[]
 
 export const courses: Course[] = stages.flatMap(s => s.courses)

@@ -79,10 +79,10 @@ export default function ReviewPage() {
       <div className="border border-gray-200 rounded-xl bg-white p-5">
         <h2 className="text-sm font-bold text-gray-700 mb-3">总体进度</h2>
         {(() => {
-          const totalCourses = reviews.reduce((s, r) => s + r.data!.courseCount, 0)
-          const totalPublished = reviews.reduce((s, r) => s + Math.round(r.data!.courseCount * r.data!.completionRate / 100), 0)
-          const totalKnowledge = reviews.reduce((s, r) => s + r.data!.knowledgeCount, 0)
-          const graduated = reviews.filter((r) => r.data!.graduationStatus === "graduated").length
+          const totalCourses = reviews.reduce((s, r) => s + (r.data?.courseCount ?? 0), 0)
+          const totalPublished = reviews.reduce((s, r) => s + Math.round((r.data?.courseCount ?? 0) * (r.data?.completionRate ?? 0) / 100), 0)
+          const totalKnowledge = reviews.reduce((s, r) => s + (r.data?.knowledgeCount ?? 0), 0)
+          const graduated = reviews.filter((r) => r.data?.graduationStatus === "graduated").length
           return (
             <div className="grid grid-cols-4 gap-3 text-center">
               <div>

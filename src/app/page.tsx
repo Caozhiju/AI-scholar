@@ -17,17 +17,17 @@ export default function Home() {
   }, [])
   const { currentCourseId, setCurrentCourseId, completedCourses, markCourseCompleted, isCourseCompleted, loaded } = useProgress()
 
-  const [activeStageId, setActiveStageId] = useState(stages[0].id)
+  const [activeStageId, setActiveStageId] = useState(stages?.[0]?.id ?? "")
 
-  const activeStage = stages.find((s) => s.id === activeStageId) ?? stages[0]
-  const activeCourseId = currentCourseId && stages.some((s) => s.courses.some((c) => c.id === currentCourseId))
+  const activeStage = (stages?.find((s: Stage) => s.id === activeStageId) ?? stages?.[0]) || { id: "", title: "", courses: [] }
+  const activeCourseId = currentCourseId && (stages ?? []).some((s: Stage) => (s?.courses ?? []).some((c) => c.id === currentCourseId))
     ? currentCourseId
-    : stages[0].courses.length > 0
-      ? stages[0].courses[0].id
+    : (stages?.[0]?.courses?.length ?? 0) > 0
+      ? stages?.[0]?.courses?.[0]?.id ?? ""
       : ""
 
   useEffect(() => {
-    if (loaded && !currentCourseId && stages[0].courses.length > 0) {
+    if (loaded && !currentCourseId && (stages?.[0]?.courses?.length ?? 0) > 0) {
       setCurrentCourseId(stages[0].courses[0].id)
     }
   }, [loaded, currentCourseId, setCurrentCourseId])
@@ -47,8 +47,8 @@ export default function Home() {
     markCourseCompleted(courseId)
   }
 
-  const allCourseIds = stages.flatMap((s) => s.courses.map((c) => c.id))
-  const totalWithQuiz = stages.flatMap((s) => s.courses).filter((c) => c.quiz && c.quiz.length > 0).length
+  const allCourseIds = stages?.flatMap((s: Stage) => s.courses.map((c) => c.id)) ?? []
+  const totalWithQuiz = stages?.flatMap((s: Stage) => s.courses).filter((c) => c.quiz && c.quiz.length > 0).length ?? 0
 
   return (
     <div className="flex flex-1 min-h-0 flex-col">
@@ -75,13 +75,13 @@ export default function Home() {
         />
       </div>
       <div className="flex-shrink-0 h-7 border-t border-gray-100 bg-white flex items-center px-6 gap-4 text-xs text-gray-400">
-        <span>LingAI Scholar <strong>v{versionInfo.version}</strong></span>
+        <span>LingAI Scholar <strong>v{versionInfo?.version ?? ""}</strong></span>
         <span className="text-gray-200">|</span>
-        <span>{versionInfo.courseCount} 课程</span>
+        <span>{versionInfo?.courseCount ?? 0} 课程</span>
         <span className="text-gray-200">|</span>
-        <span>{versionInfo.totalLearningHours} 小时</span>
+        <span>{versionInfo?.totalLearningHours ?? 0} 小时</span>
         <span className="text-gray-200">|</span>
-        <span>{versionInfo.releaseDate}</span>
+        <span>{versionInfo?.releaseDate ?? ""}</span>
       </div>
     </div>
   )

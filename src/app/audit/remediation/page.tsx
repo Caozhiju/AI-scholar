@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { runFullAudit } from "@/lib/audit"
-import { getSeverityLabel, getSeverityColor, type RemediationSeverity, type RemediationStatus } from "@/data/remediationPlan"
+import { getSeverityLabel, getSeverityColor, type RemediationSeverity, type RemediationStatus, type CourseRemediationItem } from "@/data/remediationPlan"
 
 const severityOrder: RemediationSeverity[] = ["S", "A", "B", "C"]
 const statusOrder: RemediationStatus[] = ["todo", "in-progress", "done"]
@@ -28,8 +28,8 @@ function badgeBgClass(color: string): string {
 
 export default function RemediationPage() {
   const audit = useMemo(() => runFullAudit(), [])
-  const plan = audit.remediationPlan!
-  const allCourses = useMemo(() => Array.from(new Set(plan.items.map((i) => i.courseId))), [plan])
+  const plan = audit.remediationPlan
+  const allCourses = useMemo(() => Array.from(new Set((plan?.items ?? []).map((i: { courseId: string }) => i.courseId))), [plan])
 
   const [statusOverrides, setStatusOverrides] = useState<Record<string, RemediationStatus>>({})
 
@@ -37,7 +37,7 @@ export default function RemediationPage() {
   const [filterCourse, setFilterCourse] = useState<string | "all">("all")
   const [filterStatus, setFilterStatus] = useState<RemediationStatus | "all">("all")
 
-  const filtered = plan.items.filter((item) => {
+  const filtered = (plan?.items ?? []).filter((item) => {
     if (filterSeverity !== "all" && item.severity !== filterSeverity) return false
     if (filterCourse !== "all" && item.courseId !== filterCourse) return false
     const st = statusOverrides[`${item.courseId}-${item.issue}`] || item.status
@@ -54,18 +54,18 @@ export default function RemediationPage() {
     return statusOrder.indexOf(sta) - statusOrder.indexOf(stb)
   })
 
-  function getEffectiveStatus(item: typeof plan.items[0]): RemediationStatus {
+  function getEffectiveStatus(item: CourseRemediationItem): RemediationStatus {
     return statusOverrides[`${item.courseId}-${item.issue}`] || item.status
   }
 
-  function toggleStatus(item: typeof plan.items[0]) {
+  function toggleStatus(item: CourseRemediationItem) {
     const key = `${item.courseId}-${item.issue}`
     const current = getEffectiveStatus(item)
     const next = current === "todo" ? "in-progress" : current === "in-progress" ? "done" : "todo"
     setStatusOverrides((prev) => ({ ...prev, [key]: next }))
   }
 
-  const sev = plan.summary.bySeverity
+  const sev = plan?.summary?.bySeverity ?? { S: 0, A: 0, B: 0, C: 0 }
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">

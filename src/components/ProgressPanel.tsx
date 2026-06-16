@@ -10,10 +10,11 @@ interface ProgressPanelProps {
 }
 
 export default function ProgressPanel({ stage, activeCourseId, completedCourses, totalCourseCount }: ProgressPanelProps) {
-  const course = stage.courses.find((c) => c.id === activeCourseId)
-  const courseIndex = stage.courses.findIndex((c) => c.id === activeCourseId)
-  const totalCourses = stage.courses.length
-  const completedStageCount = stage.courses.filter((c) => completedCourses.includes(c.id)).length
+  const safeCourses = (stage?.courses ?? [])
+  const course = safeCourses.find((c) => c?.id === activeCourseId)
+  const courseIndex = safeCourses.findIndex((c) => c?.id === activeCourseId)
+  const totalCourses = safeCourses.length
+  const completedStageCount = safeCourses.filter((c) => c && completedCourses.includes(c.id)).length
   const completionRate = totalCourseCount > 0 ? Math.round((completedCourses.length / totalCourseCount) * 100) : 0
 
   return (
@@ -23,7 +24,7 @@ export default function ProgressPanel({ stage, activeCourseId, completedCourses,
       <div className="space-y-5">
         <div>
           <p className="text-xs text-gray-400 mb-1">当前阶段</p>
-          <p className="text-sm font-medium text-gray-800 leading-snug">{stage.title}</p>
+          <p className="text-sm font-medium text-gray-800 leading-snug">{stage?.title ?? ""}</p>
         </div>
 
         <div>

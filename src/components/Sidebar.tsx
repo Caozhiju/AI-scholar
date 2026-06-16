@@ -2,6 +2,8 @@
 
 import { stages, type Stage } from "@/data/courses"
 
+const safeStages = (stages ?? []) as Stage[]
+
 interface SidebarProps {
   activeStageId: string
   activeCourseId: string
@@ -20,7 +22,7 @@ export default function Sidebar({ activeStageId, activeCourseId, completedCourse
       <nav className="p-3">
         <p className="text-xs font-medium text-gray-400 uppercase tracking-wider px-2 mb-2">课程目录</p>
         <ul className="space-y-1">
-          {stages.map((stage) => {
+          {safeStages.map((stage) => {
             const isActive = stage.id === activeStageId
             const stageCompleted = stage.courses.length > 0 && stage.courses.every((c) => completedCourses.includes(c.id))
             return (

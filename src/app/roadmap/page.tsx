@@ -111,7 +111,7 @@ export default function RoadmapPage() {
       {/* Stages */}
       <div className="space-y-8">
         {stages.map((stage) => {
-          const stats = stageStats.find((s) => s.stageId === stage.id)!
+          const stats = stageStats.find((s) => s.stageId === stage.id) ?? { total: 0, done: 0, rate: 0, hasContent: false }
           const desc = stageDescriptions[stage.id]
 
           return (
