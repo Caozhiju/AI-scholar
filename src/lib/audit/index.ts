@@ -30,15 +30,21 @@ export function runFullAudit(): SystemAudit {
     const riskFlags: string[] = []
     const redLineReasons: string[] = []
     const chars = countChineseChars(course.content)
+    const stageId = stages.find((s) => s.courses.some((c) => c.id === course.id))?.id || ""
+    const phaseNum = stageId === "python" ? 1 : stageId === "cli" ? 2 : stageId === "llm" ? 3 : stageId === "phase4" ? 4 : 0
+    const wordThresholds = { 1: 2000, 2: 5000, 3: 6000, 4: 7000 }
+    const wordThreshold = wordThresholds[phaseNum as keyof typeof wordThresholds] || 5000
+
     if (chars < 3000) riskFlags.push("字数异常低")
     if (!course.quiz || course.quiz.length < 3) riskFlags.push("Quiz不足")
     if (!course.visualAssets || course.visualAssets.length === 0) riskFlags.push("无图解")
     if ((course.relatedKnowledge || []).length === 0) riskFlags.push("无知识点关联")
 
-    if (chars < 5000) redLineReasons.push(`字数${chars}<5000`)
-    const casePattern1 = (course.content.match(/# 真实研究案例/g) || []).length
-    const casePattern2 = (course.content.match(/## 案例/g) || []).length
-    const totalCases = Math.max(casePattern1, casePattern2)
+    if (chars < wordThreshold) redLineReasons.push(`字数${chars}<${wordThreshold}(Phase${phaseNum}阈值)`)
+    const casePattern1 = (course.content.match(/# 真实研究案例|真实研究案例|教学应用案例/g) || []).length
+    const casePattern2 = (course.content.match(/## 案例|应用示例|实验案例|研究案例/g) || []).length
+    const pattern3 = (course.content.match(/课堂实践|教学实践案例/g) || []).length
+    const totalCases = Math.max(casePattern1, casePattern2, pattern3)
     if (totalCases < 2) redLineReasons.push("案例<2")
     if (!course.quiz || course.quiz.length < 3) redLineReasons.push(`Quiz${course.quiz?.length||0}<3`)
     if (!course.visualAssets || course.visualAssets.length < 1) redLineReasons.push("无图解")

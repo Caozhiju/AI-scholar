@@ -43,6 +43,17 @@ Python与AI工具可以帮助研究者：
 
 人工统计可能需要数周；
 Python脚本通常几秒即可完成。`,
+        quiz: [
+          { id: "q1-p001", type: "single", question: "语言学研究者学习AI的最主要原因是什么？", options: ["为了成为程序员","AI可以辅助处理和分析语言数据","AI可以完全替代语言学研究","为了跟上技术潮流"], answer: 1, explanation: "AI可以显著提升语言数据处理的效率和深度，是语言学研究的强有力工具。" },
+          { id: "q2-p001", type: "single", question: "以下哪个不是AI在语言学研究中的典型应用？", options: ["文本自动分类","语音识别与转写","自动撰写论文结论","学习者偏误检测"], answer: 2, explanation: "AI可以辅助文本分析、语音处理和偏误检测，但研究结论的撰写仍需要研究者主导。" },
+          { id: "q3-p001", type: "single", question: "科研自动化最核心的价值是什么？", options: ["完全替代研究者","减少重复性劳动","降低研究成本","加快论文发表"], answer: 1, explanation: "科研自动化的核心是将研究者从数据处理等重复性工作中解放出来。" },
+          { id: "q4-p001", type: "single", question: "为什么语言学研究者需要理解AI的能力边界？", options: ["为了限制AI的使用","为了合理选择AI工具并评估结果","为了完全不使用AI","为了开发新AI模型"], answer: 1, explanation: "理解AI能力边界有助于选择最适合的工具并准确判断AI输出。" },
+          { id: "q5-p001", type: "single", question: "学习AI对语言学研究者的长期价值是什么？", options: ["转行做程序员","拥有更丰富的方法论工具箱","获得更高学位","发表更多论文"], answer: 1, explanation: "AI为语言学研究提供了新的方法论工具和研究视角。" },
+        ],
+        visualAssets: [
+          { type: "flow", title: "AI与语言学研究关系", description: "AI辅助语言学研究的核心路径", nodes: [{ id: "n1", label: "研究问题" }, { id: "n2", label: "AI辅助处理" }, { id: "n3", label: "研究产出", isResult: true }], edges: [{ source: "n1", target: "n2" }, { source: "n2", target: "n3" }] },
+          { type: "mindmap", title: "学习路径概览", description: "本课程在体系中的位置", root: "语言学AI研究者", children: [{ label: "Python基础" }, { label: "NLP方法" }, { label: "LLM应用" }, { label: "教育创新" }] },
+        ],
       },
       {
         id: "python-002",
@@ -240,6 +251,17 @@ Python 在语言学研究中的价值不是"编程"，而是"自动化"。它把
 **Q5：有人说"语言学研究者不需要学技术，那是计算机专业的事"，你如何看待这个观点？请结合本课内容说明你的理由。**
 
 > 参考答案示例：这种观点忽略了两个重要事实。第一，语言学正在经历数据驱动的变革，未来的研究越来越依赖技术手段。第二，掌握基本的技术工具不等于成为计算机专家， 就像会用 Word 写论文不等于成为计算机科学家。Python 是语言学研究的工具，就像词典和语料库一样。理解技术的边界（能做什么、不能做什么）本身就是现代语言学研究者素养的一部分。`,
+        quiz: [
+          { id: "q1-p002", type: "single", question: "以下哪个语言学任务最适合用Python辅助完成？", options: ["设计课堂教学活动","对1000篇作文进行词频统计","编写教案","批改纸质作业"], answer: 1, explanation: "大规模文本的词频统计是Python擅长的重复性数据处理任务。" },
+          { id: "q2-p002", type: "single", question: "Python辅助语言学研究相比传统方法最根本的改变是什么？", options: ["研究者不再需要学习语言学知识","重复性数据处理从人工转为自动","研究经费大幅减少","论文篇幅变长"], answer: 1, explanation: "Python将数据处理自动化，让研究者从繁琐操作中解放出来。" },
+          { id: "q3-p002", type: "single", question: "在语言学研究中，Python最适合处理以下哪种问题？", options: ["如何设计一堂生动的语法课","如何快速统计500篇作文中的词汇使用频率","如何评估学生的口语表现","如何选择教材"], answer: 1, explanation: "Python擅长处理大规模文本数据的量化分析。" },
+          { id: "q4-p002", type: "single", question: "使用Python辅助研究时，研究者的核心角色是什么？", options: ["编写所有代码","设计研究框架并解读分析结果","管理计算机硬件","培训其他研究者使用Python"], answer: 1, explanation: "研究者的核心价值在于设计研究问题和解读结果。" },
+          { id: "q5-p002", type: "single", question: "以下关于Python在语言学研究中作用的说法正确的是？", options: ["Python可以完全替代语言学研究者","Python是处理语言数据的工具，研究设计仍需研究者完成","只有计算机专业的人才能用Python","Python只能处理英文文本"], answer: 1, explanation: "Python是数据处理工具，研究设计和结果解读需要语言学专业知识。" },
+        ],
+        visualAssets: [
+          { type: "flow", title: "Python辅助研究流程", description: "从原始数据到研究结论", nodes: [{ id: "n1", label: "原始数据" }, { id: "n2", label: "Python处理" }, { id: "n3", label: "分析结果" }, { id: "n4", label: "研究结论", isResult: true }], edges: [{ source: "n1", target: "n2" }, { source: "n2", target: "n3" }, { source: "n3", target: "n4" }] },
+          { type: "mindmap", title: "Python在语言研究中的应用", description: "主要应用场景分类", root: "Python+语言研究", children: [{ label: "语料处理" }, { label: "统计分析" }, { label: "可视化" }, { label: "自动化" }] },
+        ],
       },
       {
         id: "python-003",
