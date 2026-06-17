@@ -8,6 +8,7 @@ import { runCourseAudit } from "@/data/courseTemplate"
 import Sidebar from "@/components/Sidebar"
 import ContentArea from "@/components/ContentArea"
 import ProgressPanel from "@/components/ProgressPanel"
+import AITutor from "@/components/AITutor"
 
 export default function Home() {
   useEffect(() => {
@@ -83,6 +84,16 @@ export default function Home() {
         <span className="text-gray-200">|</span>
         <span>{versionInfo?.releaseDate ?? ""}</span>
       </div>
+
+      {activeCourseId && (
+        <AITutor
+          courseId={activeCourseId}
+          courseTitle={(() => {
+            const c = stages.flatMap(s => s.courses).find(co => co.id === activeCourseId)
+            return c?.title ?? ""
+          })()}
+        />
+      )}
     </div>
   )
 }
