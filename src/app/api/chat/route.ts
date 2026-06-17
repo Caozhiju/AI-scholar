@@ -1,7 +1,13 @@
 import { NextRequest } from "next/server"
 import { stages } from "@/data/courses"
 
-const MODEL = "gpt-4o-mini"
+// ── Provider config ──────────────────────────────────
+// DeepSeek:  model="deepseek-chat"  apiBase="https://api.deepseek.com/v1/chat/completions"
+// OpenAI:   model="gpt-4o-mini"     apiBase="https://api.openai.com/v1/chat/completions"
+const MODEL = process.env.LLM_MODEL || "deepseek-chat"
+const API_BASE = process.env.LLM_API_BASE || "https://api.deepseek.com/v1/chat/completions"
+// Priority: DEEPSEEK_API_KEY > OPENAI_API_KEY
+const API_KEY = process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY || ""
 
 const MODE_PROMPTS: Record<string, string> = {
   tutor: `你是一位专注于国际中文教育（TCSL）领域的AI导师。
@@ -44,9 +50,8 @@ export async function POST(req: NextRequest) {
       MODE_PROMPTS[mode] || MODE_PROMPTS.tutor,
     ].filter(Boolean).join("\n")
 
-    const openaiKey = process.env.OPENAI_API_KEY
-    if (!openaiKey) {
-      return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), { status: 500 })
+    if (!API_KEY) {
+      return new Response(JSON.stringify({ error: "LLM API key not configured - set DEEPSEEK_API_KEY or OPENAI_API_KEY" }), { status: 500 })
     }
 
     const body = JSON.stringify({
@@ -60,18 +65,18 @@ export async function POST(req: NextRequest) {
       stream: true,
     })
 
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    const res = await fetch(API_BASE, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${openaiKey}`,
+        Authorization: `Bearer ${API_KEY}`,
       },
       body,
     })
 
     if (!res.ok) {
       const err = await res.text()
-      return new Response(JSON.stringify({ error: `OpenAI API error: ${err}` }), { status: 502 })
+      return new Response(JSON.stringify({ error: `LLM API error: ${err}` }), { status: 502 })
     }
 
     return new Response(res.body, {
