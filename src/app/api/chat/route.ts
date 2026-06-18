@@ -65,6 +65,9 @@ export async function POST(req: NextRequest) {
       stream: true,
     })
 
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 25000) // 25s timeout
+
     const res = await fetch(API_BASE, {
       method: "POST",
       headers: {
@@ -72,7 +75,9 @@ export async function POST(req: NextRequest) {
         Authorization: `Bearer ${API_KEY}`,
       },
       body,
+      signal: controller.signal,
     })
+    clearTimeout(timeout)
 
     if (!res.ok) {
       const err = await res.text()
@@ -84,6 +89,7 @@ export async function POST(req: NextRequest) {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
         Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
       },
     })
   } catch (err: any) {
