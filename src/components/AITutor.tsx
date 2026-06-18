@@ -35,6 +35,7 @@ export default function AITutor({ courseId, courseTitle, pinned, onTogglePin }: 
   const [streamingContent, setStreamingContent] = useState("")
   const [listening, setListening] = useState(false)
   const [minimized, setMinimized] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
 
   const chatEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -111,33 +112,99 @@ export default function AITutor({ courseId, courseTitle, pinned, onTogglePin }: 
 
   if (pinned) {
     return (
-      <div className="flex flex-col h-full bg-white border-l border-gray-200 overflow-hidden" style={{ minWidth: 320, maxWidth: 420 }}>
+      <>
+        <div className="flex flex-col h-full bg-white border-l border-gray-200 overflow-hidden" style={{ minWidth: 320, maxWidth: 420 }}>
+          <ChatPanel
+            mode={mode} switchMode={switchMode} courseTitle={courseTitle}
+            displayMessages={displayMessages} quickQuestions={quickQuestions}
+            loading={loading} input={input} setInput={setInput}
+            handleKey={handleKey} sendMessage={sendMessage}
+            listening={listening} startListening={startListening} stopListening={stopListening}
+            onMinimize={() => setMinimized(true)} onTogglePin={onTogglePin} pinned={true}
+            onHistory={() => setShowHistory(true)}
+            inputRef={inputRef as any} chatEndRef={chatEndRef as any}
+          />
+        </div>
+        <HistoryDrawer show={showHistory} onClose={() => setShowHistory(false)} currentKey={`chat_${courseId}_${mode}`} onSelect={(k) => { setShowHistory(false); const [,cid,mid]=k.split('_'); setMode(mid); const s=getSaved(cid,mid); setMessages(s) }} />
+    </>
+  )
+}
+
+// ── History Drawer ─────────────────────────────────
+function HistoryDrawer({ show, onClose, currentKey, onSelect }: {
+  show: boolean; onClose: () => void; currentKey: string; onSelect: (key: string) => void
+}) {
+  const [entries, setEntries] = useState<{ key: string; course: string; mode: string; preview: string }[]>([])
+
+  useEffect(() => {
+    if (!show) return
+    const list: any[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)!
+      if (!k.startsWith("chat_") || k === currentKey) continue
+      try {
+        const msgs = JSON.parse(localStorage.getItem(k) || "[]")
+        if (msgs.length > 0) {
+          const [, cid, mid] = k.split("_")
+          list.push({ key: k, course: cid, mode: mid, preview: msgs[0]?.content?.slice(0, 30) || "" })
+        }
+      } catch {}
+    }
+    setEntries(list)
+  }, [show, currentKey])
+
+  if (!show) return null
+
+  const modeLabel: Record<string, string> = { tutor: "学习助手", research: "科研导师", writing: "论文写作" }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex">
+      <div className="flex-1 bg-black/20" onClick={onClose} />
+      <div className="w-80 bg-white border-l border-gray-200 h-full overflow-y-auto p-4 shadow-lg">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-gray-900">历史对话</h3>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors text-sm">✕</button>
+        </div>
+        {entries.length === 0 ? (
+          <p className="text-xs text-gray-400 text-center py-8">暂无其他对话记录</p>
+        ) : (
+          <div className="space-y-2">
+            {entries.map(e => (
+              <button key={e.key} onClick={() => onSelect(e.key)}
+                className="w-full text-left bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl px-3 py-2.5 transition-colors">
+                <p className="text-xs font-medium text-gray-800 truncate">{e.course}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  {modeLabel[e.mode] || e.mode}
+                  <span className="mx-1">·</span>
+                  {e.preview}...
+                </p>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+
+  return (
+    <>
+      <div id="ai-tutor-panel" className="fixed bottom-4 right-4 z-50 flex flex-col bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden"
+        style={{ width: 400, height: 580 }}>
         <ChatPanel
           mode={mode} switchMode={switchMode} courseTitle={courseTitle}
           displayMessages={displayMessages} quickQuestions={quickQuestions}
           loading={loading} input={input} setInput={setInput}
           handleKey={handleKey} sendMessage={sendMessage}
           listening={listening} startListening={startListening} stopListening={stopListening}
-          onMinimize={() => setMinimized(true)} onTogglePin={onTogglePin} pinned={true}
+          onMinimize={() => setMinimized(true)} onTogglePin={onTogglePin} pinned={false}
+          onHistory={() => setShowHistory(true)}
           inputRef={inputRef as any} chatEndRef={chatEndRef as any}
         />
       </div>
-    )
-  }
-
-  return (
-    <div id="ai-tutor-panel" className="fixed bottom-4 right-4 z-50 flex flex-col bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden"
-      style={{ width: 400, height: 580 }}>
-      <ChatPanel
-        mode={mode} switchMode={switchMode} courseTitle={courseTitle}
-        displayMessages={displayMessages} quickQuestions={quickQuestions}
-        loading={loading} input={input} setInput={setInput}
-        handleKey={handleKey} sendMessage={sendMessage}
-        listening={listening} startListening={startListening} stopListening={stopListening}
-        onMinimize={() => setMinimized(true)} onTogglePin={onTogglePin} pinned={false}
-        inputRef={inputRef as any} chatEndRef={chatEndRef as any}
-      />
-    </div>
+      <HistoryDrawer show={showHistory} onClose={() => setShowHistory(false)} currentKey={`chat_${courseId}_${mode}`} onSelect={(k) => { setShowHistory(false); const [,cid,mid]=k.split('_'); setMode(mid); const s=getSaved(cid,mid); setMessages(s) }} />
+    </>
   )
 }
 
@@ -146,14 +213,14 @@ function ChatPanel({
   displayMessages, quickQuestions,
   loading, input, setInput, handleKey, sendMessage,
   listening, startListening, stopListening,
-  onMinimize, onTogglePin, pinned, inputRef, chatEndRef,
+  onMinimize, onTogglePin, pinned, onHistory, inputRef, chatEndRef,
 }: {
   mode: string; switchMode: (m: string) => void; courseTitle: string
   displayMessages: Message[]; quickQuestions: string[]
   loading: boolean; input: string; setInput: (v: string) => void
   handleKey: (e: React.KeyboardEvent) => void; sendMessage: (t: string) => void
   listening: boolean; startListening: () => void; stopListening: () => void
-  onMinimize: () => void; onTogglePin?: () => void; pinned: boolean
+  onMinimize: () => void; onTogglePin?: () => void; pinned: boolean; onHistory?: () => void
   inputRef: React.RefObject<HTMLTextAreaElement>; chatEndRef: React.RefObject<HTMLDivElement>
 }) {
   const handleQuick = (q: string) => { if (!loading) sendMessage(q) }
@@ -168,6 +235,10 @@ function ChatPanel({
             <span className="text-[10px] text-gray-400 hidden sm:inline">{courseTitle.slice(0, 20)}</span>
           </div>
           <div className="flex items-center gap-0.5">
+            <button onClick={onHistory}
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors text-xs" title="历史记录">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </button>
             <button onClick={onTogglePin}
               className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors text-xs"
               title={pinned ? "取消停靠" : "停靠分屏"}>
