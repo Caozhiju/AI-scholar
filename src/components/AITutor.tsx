@@ -10,27 +10,45 @@ const MODES = [
   { id: "writing", label: "论文写作", icon: "✍️" },
 ]
 
-const QUICK_QUESTIONS = [
-  "什么是核心概念？",
-  "有哪些常见误区？",
-  "请举一个教育应用案例。",
-  "这个知识点与哪些课程相关？",
-]
+const MODE_QUESTIONS: Record<string, (title: string) => string[]> = {
+  tutor: (title) => [
+    `《${title}》的核心概念是什么？`,
+    `学习《${title}》有哪些常见误区？`,
+    `请举一个与《${title}》相关的教育应用案例。`,
+    `《${title}》与哪些其他课程有关联？`,
+    `《${title}》对国际中文教育研究有什么启示？`,
+  ],
+  research: (title) => [
+    `围绕《${title}》可以设计哪些研究问题？`,
+    `《${title}》中适合使用什么研究方法？`,
+    `如何为《${title}》设计实验方案？`,
+    `《${title}》的研究数据应该怎么收集和分析？`,
+    `关于《${title}》有哪些高影响力的研究成果？`,
+  ],
+  writing: (title) => [
+    `围绕《${title}》如何撰写一篇实证研究论文？`,
+    `《${title}》的文献综述应该包含哪些关键内容？`,
+    `如何用学术语言描述《${title}》的研究方法？`,
+    `《${title}》的研究结果如何与理论对话？`,
+    `关于《${title}》有哪些推荐的投稿期刊？`,
+  ],
+}
 
 interface Message {
   role: "user" | "assistant"
   content: string
 }
 
-interface AITutorProps {
-  courseId: string
-  courseTitle: string
-}
+interface AITutorProps { courseId: string; courseTitle: string }
 
 export default function AITutor({ courseId, courseTitle }: AITutorProps) {
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState("tutor")
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const key = `chat_${courseId}_tutor`
+    const saved = typeof window !== "undefined" ? localStorage.getItem(key) : null
+    return saved ? JSON.parse(saved) : []
+  })
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const [streamingContent, setStreamingContent] = useState("")
@@ -42,6 +60,8 @@ export default function AITutor({ courseId, courseTitle }: AITutorProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
+  const modeRef = useRef(mode)
+  modeRef.current = mode
 
   const scrollToBottom = useCallback(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -49,7 +69,31 @@ export default function AITutor({ courseId, courseTitle }: AITutorProps) {
 
   useEffect(() => { scrollToBottom() }, [messages, streamingContent, scrollToBottom])
 
-  // ── Drag resize ──────────────────────────────────
+  // ── Save history whenever messages change ──────────────
+  useEffect(() => {
+    const key = `chat_${courseId}_${modeRef.current}`
+    localStorage.setItem(key, JSON.stringify(messages))
+  }, [courseId, messages])
+
+  // ── Switch mode: save current, load new ────────────────
+  const switchMode = useCallback((newMode: string) => {
+    if (newMode === mode) return
+    const key = `chat_${courseId}_${newMode}`
+    const saved = localStorage.getItem(key)
+    setMessages(saved ? JSON.parse(saved) : [])
+    setMode(newMode)
+    setStreamingContent("")
+  }, [courseId, mode])
+
+  // ── Switch course: reload history for current mode ─────
+  useEffect(() => {
+    const key = `chat_${courseId}_${mode}`
+    const saved = localStorage.getItem(key)
+    setMessages(saved ? JSON.parse(saved) : [])
+    setStreamingContent("")
+  }, [courseId])
+
+  // ── Drag resize ──────────────────────────────────────
   const [resizing, setResizing] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
 
   const onResizeStart = useCallback((e: React.MouseEvent) => {
@@ -71,16 +115,14 @@ export default function AITutor({ courseId, courseTitle }: AITutorProps) {
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp) }
   }, [resizing])
 
-  // ── Voice input ──────────────────────────────────
+  // ── Voice input ──────────────────────────────────────
   const startListening = useCallback(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!SpeechRecognition) { alert("当前浏览器不支持语音输入"); return }
-
     const recognition = new SpeechRecognition()
     recognition.lang = "zh-CN"
     recognition.continuous = false
     recognition.interimResults = false
-
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript
       setInput(prev => prev + transcript)
@@ -88,7 +130,6 @@ export default function AITutor({ courseId, courseTitle }: AITutorProps) {
     }
     recognition.onerror = () => setListening(false)
     recognition.onend = () => setListening(false)
-
     recognitionRef.current = recognition
     recognition.start()
     setListening(true)
@@ -99,7 +140,12 @@ export default function AITutor({ courseId, courseTitle }: AITutorProps) {
     setListening(false)
   }, [])
 
-  // ── Send message ─────────────────────────────────
+  // ── Copy message ─────────────────────────────────────
+  const copyContent = useCallback((text: string) => {
+    navigator.clipboard.writeText(text).catch(() => {})
+  }, [])
+
+  // ── Send message ─────────────────────────────────────
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || loading) return
     const newMessages: Message[] = [...messages, { role: "user", content: text.trim() }]
@@ -151,7 +197,10 @@ export default function AITutor({ courseId, courseTitle }: AITutorProps) {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input) }
   }
 
-  // ── Closed state ─────────────────────────────────
+  // ── Mode-specific questions ──────────────────────────
+  const quickQuestions = MODE_QUESTIONS[mode]?.(courseTitle) || MODE_QUESTIONS.tutor(courseTitle)
+
+  // ── Closed state ─────────────────────────────────────
   if (!open) {
     return (
       <button
@@ -194,7 +243,7 @@ export default function AITutor({ courseId, courseTitle }: AITutorProps) {
         </div>
         <div className="flex gap-1.5">
           {MODES.map(m => (
-            <button key={m.id} onClick={() => { setMode(m.id); setMessages([]); setStreamingContent("") }}
+            <button key={m.id} onClick={() => switchMode(m.id)}
               className={`flex-1 text-[11px] py-1.5 rounded-lg font-medium transition-all duration-200 ${
                 mode === m.id
                   ? "bg-[#1f6feb] text-white shadow-sm"
@@ -214,8 +263,8 @@ export default function AITutor({ courseId, courseTitle }: AITutorProps) {
             <div className="w-12 h-12 rounded-2xl bg-[#1f6feb]/10 flex items-center justify-center text-2xl mb-4">💬</div>
             <p className="text-[#8b949e] text-sm mb-5">选择一个问题开始学习</p>
             <div className="w-full space-y-2">
-              {QUICK_QUESTIONS.map(q => (
-                <button key={q} onClick={() => handleQuickQuestion(q)}
+              {quickQuestions.map((q, i) => (
+                <button key={i} onClick={() => handleQuickQuestion(q)}
                   className="w-full text-left text-xs text-[#c9d1d9] bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] rounded-xl px-4 py-2.5 transition-all duration-200 hover:border-[#1f6feb]/30">
                   <span className="text-[#58a6ff] mr-2">▸</span>{q}
                 </button>
@@ -229,11 +278,22 @@ export default function AITutor({ courseId, courseTitle }: AITutorProps) {
                 {msg.role === "assistant" && (
                   <div className="w-7 h-7 rounded-full bg-[#1f6feb]/10 flex items-center justify-center flex-shrink-0 text-xs">🤖</div>
                 )}
-                <div className={`max-w-[82%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed transition-all ${
+                <div className={`group relative max-w-[82%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed transition-all ${
                   msg.role === "user"
                     ? "bg-[#1f6feb] text-white rounded-br-md"
                     : "bg-[#21262d] text-[#e6edf3] border border-[#30363d] rounded-bl-md"
                 }`}>
+                  {msg.role === "assistant" && (
+                    <button
+                      onClick={() => copyContent(msg.content)}
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 rounded flex items-center justify-center text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#30363d]"
+                      title="复制"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                      </svg>
+                    </button>
+                  )}
                   {msg.role === "user" ? (
                     <p className="text-sm">{msg.content}</p>
                   ) : (
