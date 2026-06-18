@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { stages, type Stage } from "@/data/courses"
 import { versionInfo } from "@/data/version"
 import { useProgress } from "@/hooks/useProgress"
@@ -50,6 +50,8 @@ export default function Home() {
 
   const allCourseIds = stages?.flatMap((s: Stage) => s.courses.map((c) => c.id)) ?? []
   const totalWithQuiz = stages?.flatMap((s: Stage) => s.courses).filter((c) => c.quiz && c.quiz.length > 0).length ?? 0
+  const [aiPinned, setAiPinned] = useState(false)
+  const handleTogglePin = useCallback(() => setAiPinned(p => !p), [])
 
   return (
     <div className="flex flex-1 min-h-0 flex-col">
@@ -74,6 +76,17 @@ export default function Home() {
           completedCourses={completedCourses}
           totalCourseCount={allCourseIds.length}
         />
+        {aiPinned && activeCourseId && (
+          <AITutor
+            courseId={activeCourseId}
+            courseTitle={(() => {
+              const c = stages.flatMap(s => s.courses).find(co => co.id === activeCourseId)
+              return c?.title ?? ""
+            })()}
+            pinned={true}
+            onTogglePin={handleTogglePin}
+          />
+        )}
       </div>
       <div className="flex-shrink-0 h-7 border-t border-gray-100 bg-white flex items-center px-6 gap-4 text-xs text-gray-400">
         <span>LingAI Scholar <strong>v{versionInfo?.version ?? ""}</strong></span>
@@ -85,13 +98,15 @@ export default function Home() {
         <span>{versionInfo?.releaseDate ?? ""}</span>
       </div>
 
-      {activeCourseId && (
+      {activeCourseId && !aiPinned && (
         <AITutor
           courseId={activeCourseId}
           courseTitle={(() => {
             const c = stages.flatMap(s => s.courses).find(co => co.id === activeCourseId)
             return c?.title ?? ""
           })()}
+          pinned={false}
+          onTogglePin={handleTogglePin}
         />
       )}
     </div>
